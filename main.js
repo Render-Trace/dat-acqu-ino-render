@@ -9,7 +9,7 @@ const SERVIDOR_PORTA = 3300;
 const HABILITAR_OPERACAO_INSERIR = true;
 // função para comunicação serial
 const serial = async (
-    sensorDistanciaDados
+    sensoresDistancia
 ) => {
     // conexão com o banco de dados MySQL
     let poolBancoDados = mysql.createPool(
@@ -43,31 +43,38 @@ const serial = async (
         console.log(data);
         const valores = data.split(';');
         const sensorDistancia = parseInt(valores[0]);
+        const sensorDistancia1 = sensorDistancia;
+        const sensorDistancia2 = sensorDistancia + 100;
+        const sensorDistancia3 = sensorDistancia + 200;
+        const sensorDistancia4 = sensorDistancia + 300;
         // armazena os valores dos sensores nos arrays correspondentes
-        sensorDistanciaDados.push(sensorDistancia);
+        sensoresDistancia.sensorDistancia1.push(sensorDistancia1);
+        sensoresDistancia.sensorDistancia2.push(sensorDistancia2);
+        sensoresDistancia.sensorDistancia3.push(sensorDistancia3);
+        sensoresDistancia.sensorDistancia4.push(sensorDistancia4);
         // insere os dados no banco de dados (se habilitado)
         if (HABILITAR_OPERACAO_INSERIR) {
             // este insert irá inserir os dados na tabela "medida"
             await poolBancoDados.execute(
                 'INSERT INTO leitura (distancia, fk_sensor, alerta) VALUES (?, ?, ?)',
-                [sensorDistancia, 1, 0]
+                [sensorDistancia1, 1, 0]
             );
-            console.log("valores inseridos no banco: ", sensorDistancia + ", " + 1 + ", " + 0);
+            console.log("valores inseridos no banco: ", sensorDistancia1 + ", " + 1 + ", " + 0);
             await poolBancoDados.execute(
                 'INSERT INTO leitura (distancia, fk_sensor, alerta) VALUES (?, ?, ?)',
-                [sensorDistancia + 100, 2, 0]
+                [sensorDistancia2, 2, 0]
             );
-            console.log("valores inseridos no banco: ", (sensorDistancia + 100) + ", " + 2 + ", " + 0);
+            console.log("valores inseridos no banco: ", sensorDistancia2 + ", " + 2 + ", " + 0);
             await poolBancoDados.execute(
                 'INSERT INTO leitura (distancia, fk_sensor, alerta) VALUES (?, ?, ?)',
-                [sensorDistancia + 200, 3, 0]
+                [sensorDistancia3, 3, 0]
             );
-            console.log("valores inseridos no banco: ", (sensorDistancia + 200) + ", " + 3 + ", " + 0);
+            console.log("valores inseridos no banco: ", sensorDistancia3 + ", " + 3 + ", " + 0);
             await poolBancoDados.execute(
                 'INSERT INTO leitura (distancia, fk_sensor, alerta) VALUES (?, ?, ?)',
-                [sensorDistancia + 300, 4, 0]
+                [sensorDistancia4, 4, 0]
             );
-            console.log("valores inseridos no banco: ", (sensorDistancia + 300) + ", " + 4 + ", " + 0);
+            console.log("valores inseridos no banco: ", sensorDistancia4 + ", " + 4 + ", " + 0);
         }
     });
     // evento para lidar com erros na comunicação serial
@@ -98,13 +105,18 @@ const servidor = (
 // função principal assíncrona para iniciar a comunicação serial e o servidor web
 (async () => {
     // arrays para armazenar os valores dos sensores
-    const sensorDistanciaDados = [];
+    const sensorDistancia = {
+        sensorDistancia1: [],
+        sensorDistancia2: [],
+        sensorDistancia3: [],
+        sensorDistancia4: []
+    };
     // inicia a comunicação serial
     await serial(
-        sensorDistanciaDados
+        sensorDistancia
     );
     // inicia o servidor web
     servidor(
-        sensorDistanciaDados
+        sensorDistancia
     );
 })();
