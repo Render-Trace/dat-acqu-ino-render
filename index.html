@@ -9,102 +9,74 @@
 <body>
 
     <h1>Graphics</h1>
-    <div style="display: flex;">
-        <div style="width: 50%;">
-            <canvas id="sensorAnalogico"></canvas>
-        </div>
-        <div style="width: 50%;">
-            <canvas id="sensorDigital"></canvas>
-        </div>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+        <canvas id="sensorDistancia1"></canvas>
+        <canvas id="sensorDistancia2"></canvas>
+        <canvas id="sensorDistancia3"></canvas>
+        <canvas id="sensorDistancia4"></canvas>
     </div>
 
     <script>
-        var sensorAnalogico = new Chart(document.getElementById('sensorAnalogico').getContext('2d'), {
-            type: 'line',
-            data: {
-                datasets: [{
-                    label: 'Analogico',
-                    borderColor: '#63B1BC',
-                    backgroundColor: '#ED145B'
-                }]
-            },
-            options: {
-                scales: {
-                    x: {
-                        beginAtZero: true
+        let sensores = [];
+        let cores = ['#ED145B', '#0762C8', '#55A630', '#F4A261'];
+
+        for (let numero = 1; numero <= 4; numero++) {
+            sensores.push({
+                chave: 'sensorDistancia' + numero,
+                grafico: new Chart(document.getElementById('sensorDistancia' + numero).getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Sensor de distância ' + numero,
+                            borderColor: '#63B1BC',
+                            backgroundColor: cores[numero - 1]
+                        }]
                     },
-                    y: {
-                        title: {
-                            display: true,
-                            text: '(%)'
-                        },
-                        beginAtZero: true,
-                    },
-                },
-            }
-        });
-
-        var sensorDigital = new Chart(document.getElementById('sensorDigital').getContext('2d'), {
-            type: 'line',
-            data: {
-                datasets: [{
-                    label: 'Digital',
-                    borderColor: '#63B1BC',
-                    backgroundColor: '#0762C8'
-                }]
-            },
-            options: {
-                scales: {
-                    x: {
-                        beginAtZero: true
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: '(0-1)'
-                        },
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-        var paginacao = {};
-        var tempo = {};
-
-        function obterDados(grafico, endpoint) {
-            fetch('http://localhost:3300/sensores/' + endpoint)
-                .then(response => response.json())
-                .then(valores => {
-                    if (paginacao[endpoint] == null) {
-                        paginacao[endpoint] = 0;
-                    }
-                    if (tempo[endpoint] == null) {
-                        tempo[endpoint] = 0;
-                    }
-
-                    var ultimaPaginacao = paginacao[endpoint];
-                    paginacao[endpoint] = valores.length;
-                    valores = valores.slice(ultimaPaginacao);
-
-                    valores.forEach((valor) => {
-                        if (grafico.data.labels.length == 10 && grafico.data.datasets[0].data.length == 10) {
-                            grafico.data.labels.shift();
-                            grafico.data.datasets[0].data.shift();
+                    options: {
+                        scales: {
+                            x: { beginAtZero: true },
+                            y: {
+                                title: { display: true, text: 'Distância' },
+                                beginAtZero: true
+                            }
                         }
+                    }
+                })
+            });
+        }
 
-                        grafico.data.labels.push(tempo[endpoint]++);
-                        grafico.data.datasets[0].data.push(parseFloat(valor));
-                        grafico.update();
-                    });
+        let paginacao = {};
+        let tempo = {};
+
+        function obterDados() {
+            fetch('http://localhost:3300/sensores/digital')
+                .then(response => response.json())
+                .then(dados => {
+                    for (let i = 0; i < sensores.length; i++) {
+                        let chave = sensores[i].chave;
+                        let grafico = sensores[i].grafico;
+                        if (paginacao[chave] == null) paginacao[chave] = 0;
+                        if (tempo[chave] == null) tempo[chave] = 0;
+                        let novosValores = dados[chave].slice(paginacao[chave]);
+                        paginacao[chave] = dados[chave].length;
+
+                        novosValores.forEach((valor) => {
+                            if (grafico.data.labels.length == 10 && grafico.data.datasets[0].data.length == 10) {
+                                grafico.data.labels.shift();
+                                grafico.data.datasets[0].data.shift();
+                            }
+                            grafico.data.labels.push(tempo[chave]++);
+                            grafico.data.datasets[0].data.push(parseFloat(valor));
+                        });
+                        if (novosValores.length > 0) grafico.update();
+                    }
                 })
                 .catch(error => console.error('Erro ao obter dados:', error));
         }
 
-        setInterval(() => {
-            obterDados(sensorAnalogico, 'analogico');
-            obterDados(sensorDigital, 'digital');
-        }, 1000);
+        obterDados();
+        setInterval(obterDados, 1000);
 
     </script>
 </body>
