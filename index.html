@@ -4,16 +4,17 @@
 <head>
     <title>Graphics</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <h1>Graphics</h1>
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-        <canvas id="sensorDistancia1"></canvas>
-        <canvas id="sensorDistancia2"></canvas>
-        <canvas id="sensorDistancia3"></canvas>
-        <canvas id="sensorDistancia4"></canvas>
+    <h1>Gráficos com dados simulados</h1>
+    <div class="graficos">
+        <div class="grafico"><canvas id="sensorDistancia1"></canvas></div>
+        <div class="grafico"><canvas id="sensorDistancia2"></canvas></div>
+        <div class="grafico"><canvas id="sensorDistancia3"></canvas></div>
+        <div class="grafico"><canvas id="sensorDistancia4"></canvas></div>
     </div>
 
     <script>
@@ -28,12 +29,14 @@
                     data: {
                         labels: [],
                         datasets: [{
-                            label: 'Sensor de distância ' + numero,
+                            label: 'Tolva ' + numero,
                             borderColor: '#63B1BC',
                             backgroundColor: cores[numero - 1]
                         }]
                     },
                     options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
                         scales: {
                             x: { beginAtZero: true },
                             y: {
